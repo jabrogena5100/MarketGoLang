@@ -7,7 +7,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	repo "github.com/jabrogena5100/MarketGoLang.git/internal/adapters/postgresql/sqlc"
+	"github.com/jabrogena5100/MarketGoLang.git/internal/orders"
 	"github.com/jabrogena5100/MarketGoLang.git/internal/products"
+	"github.com/jackc/pgx/v5"
 )
 
 //run -> graceful shutdown
@@ -29,8 +32,12 @@ r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("all good"))
 })
 
-productHandler := products.NewHandler(nil)
+productService := products.NewService(repo.New(app.db)); 
+productHandler := products.NewHandler(productService)
 r.Get("/products", productHandler.ListProducts)
+
+ordersHandler := orders.NewHandler(nil)
+r.Post("/orders", ordersHandler.PlaceOrder)
 
 return r
 }
@@ -38,7 +45,8 @@ return r
 type application struct { 
 config config 
 // logger 
-// db driver 
+// db driver : without this application in main.go doesn't work
+db *pgx.Conn
 }
 
 // run 

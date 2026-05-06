@@ -1,0 +1,36 @@
+package orders
+
+import (
+	"log"
+	"net/http"
+
+	"github.com/jabrogena5100/MarketGoLang.git/internal/json"
+)
+
+type handler struct { 
+	service Service
+}
+
+func NewHandler(service Service) *handler { 
+	return &handler { 
+		service: service, 
+	}
+}
+
+func (h *handler) PlaceOrder(w http.ResponseWriter, r *http.Request) { 
+	var tempOrder createOrderParams
+	if err := json.Read(r, &tempOrder); err != nil { 
+		log.Println(err) // log it to know what's wrong
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	createdOrder, err := h.service.PlaceOrder(r.Context(), tempOrder)
+	if err != nil { 
+		log.Println(err) // log it to know what's wrong
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	json.Write(w, http.StatusCreated, createdOrder)
+}
